@@ -1,0 +1,274 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource/be-vietnam-pro/400.css";
+@import "@fontsource/be-vietnam-pro/500.css";
+@import "@fontsource/be-vietnam-pro/600.css";
+@import "@fontsource/be-vietnam-pro/700.css";
+@import "@fontsource/bricolage-grotesque/600.css";
+@import "@fontsource/bricolage-grotesque/700.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: 'Bricolage Grotesque', 'Be Vietnam Pro', system-ui, sans-serif;
+    --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
+    --font-mono: ui-monospace, monospace;
+    /* Chữ Hán: dùng font có sẵn của hệ điều hành (không nhúng font CJK nặng vài MB). */
+    --font-hanzi: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', 'Source Han Sans SC', sans-serif;
+    --color-brand: var(--brand);
+    --color-brand-foreground: var(--brand-foreground);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    --background: #f5f5f7;
+    --foreground: #1c1c1e;
+    --card: #ffffff;
+    --card-foreground: #1c1c1e;
+    --popover: #ffffff;
+    --popover-foreground: #1c1c1e;
+    --primary: #1c1c1e;
+    --primary-foreground: #ffffff;
+    --secondary: #f0f0f2;
+    --secondary-foreground: #1c1c1e;
+    --muted: #f0f0f2;
+    --muted-foreground: #8e8e93;
+    --accent: #f0f0f2;
+    --accent-foreground: #1c1c1e;
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: #ececee;
+    --input: #e5e5ea;
+    --ring: #1c1c1e;
+    /* Màu nhấn theo nhóm (use-group-theme ghi đè); mặc định vàng. */
+    --brand: #e5484d;
+    --brand-foreground: #ffffff;
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.875rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+    --background: #000000;
+    --foreground: #f5f5f7;
+    --card: #1c1c1e;
+    --card-foreground: #f5f5f7;
+    --popover: #1c1c1e;
+    --popover-foreground: #f5f5f7;
+    --primary: #f5f5f7;
+    --primary-foreground: #1c1c1e;
+    --secondary: #2c2c2e;
+    --secondary-foreground: #f5f5f7;
+    --muted: #2c2c2e;
+    --muted-foreground: #98989f;
+    --accent: #2c2c2e;
+    --accent-foreground: #f5f5f7;
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: #2c2c2e;
+    --input: #3a3a3c;
+    --ring: #f5f5f7;
+    --brand: #e5484d;
+    --brand-foreground: #ffffff;
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+    }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+    }
+  html {
+    @apply font-sans;
+    /* Không phóng to khi chạm hai lần (dùng như app trên điện thoại). */
+    touch-action: manipulation;
+    /* KHÔNG đặt overflow-x/max-width ở đây: để body truyền overflow lên viewport,
+       nhờ vậy Radix khóa cuộn và bù padding đúng chỗ khi mở modal (không bị lệch). */
+    }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    }
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ───────────── Chuyển động ─────────────
+   Một bộ nhỏ, dùng chung một đường cong để mọi thao tác có cùng "cảm giác". */
+:root {
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop-in {
+  0% { transform: scale(0.85); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@keyframes ring-draw {
+  from { stroke-dasharray: 0 var(--ring-c); }
+}
+
+/* Vào trang (trang chủ, trang nhóm, màn khoá). */
+@utility animate-page-in {
+  animation: page-in 0.45s var(--ease-out-soft) both;
+}
+/* Đổi tab: nội dung mới trượt nhẹ lên. */
+@utility animate-tab-in {
+  animation: rise-in 0.3s var(--ease-out-soft) both;
+}
+/* Phần tử danh sách: hiện lần lượt theo --i (giới hạn để danh sách dài không chờ lâu). */
+@utility animate-stagger {
+  animation: rise-in 0.35s var(--ease-out-soft) both;
+  animation-delay: calc(min(var(--i, 0), 12) * 35ms);
+}
+@utility animate-pop {
+  animation: pop-in 0.35s var(--ease-spring);
+}
+
+/* Cung trong vòng số dư: vẽ ra khi mở trang, co giãn mượt khi số dư đổi. */
+.ring-arc {
+  transition: stroke-dasharray 0.6s var(--ease-out-soft), stroke-dashoffset 0.6s var(--ease-out-soft);
+  animation: ring-draw 0.9s var(--ease-out-soft) both;
+}
+
+/* Thanh tỉ lệ (thống kê, số dư) giãn mượt. */
+@keyframes bar-grow {
+  from { width: 0; }
+}
+.bar-fill {
+  transition: width 0.6s var(--ease-out-soft);
+  animation: bar-grow 0.8s var(--ease-out-soft) both;
+}
+
+/* Nội dung trong drawer/modal hiện lần lượt ngay sau khi khung trượt/phóng lên. */
+.sheet-stagger > * {
+  animation: rise-in 0.4s var(--ease-out-soft) both;
+  animation-delay: 60ms;
+}
+.sheet-stagger > :nth-child(2) { animation-delay: 100ms; }
+.sheet-stagger > :nth-child(3) { animation-delay: 140ms; }
+.sheet-stagger > :nth-child(4) { animation-delay: 180ms; }
+.sheet-stagger > :nth-child(5) { animation-delay: 220ms; }
+.sheet-stagger > :nth-child(6) { animation-delay: 260ms; }
+.sheet-stagger > :nth-child(n + 7) { animation-delay: 300ms; }
+/* Đang đóng thì không chạy lại hiệu ứng vào. */
+[data-state="closed"] .sheet-stagger > *,
+.sheet-stagger[data-state="closed"] > * {
+  animation: none;
+}
+
+/* Hộp thoại màn rộng xếp chồng: có bảng con mở đè thì bảng cha thu nhỏ, lùi lên một chút và tối đi —
+   điện thoại do vaul NestedRoot làm. `scale` / `top` riêng, không đụng `translate` của Tailwind. */
+[data-slot='dialog-content'] {
+  transition:
+    scale 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    top 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 320ms ease-out;
+}
+[data-slot='dialog-content'][data-stacked] {
+  scale: 0.94;
+  top: calc(50% - 18px);
+  filter: brightness(0.96);
+}
+
+/* Drawer điện thoại xếp chồng: vaul NestedRoot không thu nhỏ drawer cha khi cha dùng snap points —
+   tự làm bằng `scale` riêng (không đụng `transform` vaul ghi cho vị trí snap). */
+[data-vaul-drawer] {
+  transform-origin: 50% 0;
+  transition-property: transform, scale, filter;
+  transition-duration: 0.5s, 320ms, 320ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1), cubic-bezier(0.22, 1, 0.36, 1), ease-out;
+}
+[data-vaul-drawer][data-stacked] {
+  scale: 0.94;
+  filter: brightness(0.92);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

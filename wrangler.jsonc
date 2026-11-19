@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fluency",
+  // Cùng tài khoản Cloudflare với chiatien.
+  "account_id": "905088b40a2385757fe35a28b31b68db",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  // Frontend (Vite build) là static assets; chỉ /api/* chạy qua Worker.
+  "assets": {
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // Mỗi "sổ từ" (một khóa bí mật) là một Durable Object SQLite.
+  "durable_objects": {
+    "bindings": [{ "name": "LIBRARIES", "class_name": "LibraryStore" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["LibraryStore"] }],
+  // Tạm dùng *.workers.dev để test; sau này gắn domain riêng như chiatien.
+  "workers_dev": true,
+  "observability": { "enabled": true, "logs": { "invocation_logs": false } }
+}
