@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Fragment } from 'react'
-import { PencilIcon, PenLineIcon } from 'lucide-react'
+import { PencilIcon, PenLineIcon, StickyNoteIcon } from 'lucide-react'
 import { charPinyins, speak } from '@/lib/chinese'
 import { charReadings, useHanviet, wordHanviet, type CharReading } from '@/lib/hanviet'
 import { hanChars } from '@/lib/strokes'
@@ -77,6 +77,12 @@ export function WordCard({ word, topics, hideMeaning, index = 0, onEdit, onPract
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Chưa có câu ví dụ.</p>
+          )}
+          {word.note && (
+            <p className="mt-3 rounded-xl bg-muted/60 px-3 py-2 text-sm whitespace-pre-line">
+              <StickyNoteIcon className="mr-1.5 inline size-3.5 -translate-y-px text-muted-foreground" />
+              {word.note}
+            </p>
           )}
           <CharBreakdown word={word} charIndex={charIndex} />
           <div className="mt-2 flex justify-end gap-1">

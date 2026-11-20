@@ -198,6 +198,7 @@ function Card({ word, front, flipped, onFlip }: { word: Word; front: Front; flip
               <SpeakButton text={word.example} size="sm" />
             </div>
           )}
+          {word.note && <p className="mt-3 w-full border-t border-border/70 pt-3 text-left text-sm whitespace-pre-line text-muted-foreground">{word.note}</p>}
         </div>
       </div>
     </div>

@@ -84,7 +84,7 @@ export default function App() {
   }, [words])
 
   const index = useMemo(
-    () => new Map(words.map((w) => [w.id, fold([w.hanzi, w.pinyin, toPinyin(w.hanzi), w.meaning, w.example, w.exampleMeaning].join('|'))])),
+    () => new Map(words.map((w) => [w.id, fold([w.hanzi, w.pinyin, toPinyin(w.hanzi), w.meaning, w.example, w.exampleMeaning, w.note ?? ''].join('|'))])),
     [words],
   )
 

@@ -114,6 +114,13 @@ export async function init() {
     for (const id of saved?.dirty ?? []) dirty.add(id)
     cursor = saved?.cursor ?? 0
     lastSyncAt = saved?.lastSyncAt ?? 0
+    // Bổ sung chủ đề mẫu mới ra sau khi sổ đã tạo. Bản đã sửa/xóa vẫn nằm trong recs (xóa mềm) nên không bị thêm lại;
+    // updatedAt = 1 nên trên server bản thật luôn thắng.
+    for (const r of seedRecords()) {
+      if (recs.has(r.id)) continue
+      recs.set(r.id, r)
+      dirty.add(r.id)
+    }
   } else {
     // Lần đầu dùng: tạo sổ mới + dữ liệu mẫu (updatedAt = 1 nên không bao giờ đè dữ liệu thật).
     key = randomKey()

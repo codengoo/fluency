@@ -30,7 +30,7 @@ interface Props {
   defaultTopicId?: string
 }
 
-const EMPTY = { hanzi: '', pinyin: '', meaning: '', example: '', examplePinyin: '', exampleMeaning: '' }
+const EMPTY = { hanzi: '', pinyin: '', meaning: '', example: '', examplePinyin: '', exampleMeaning: '', note: '' }
 
 export function WordDrawer({ open, onOpenChange, word, defaultTopicId }: Props) {
   const { topics, words } = useStore()
@@ -51,6 +51,7 @@ export function WordDrawer({ open, onOpenChange, word, defaultTopicId }: Props) 
         example: word.example,
         examplePinyin: word.examplePinyin,
         exampleMeaning: word.exampleMeaning,
+        note: word.note ?? '',
       })
       setTopicIds(word.topicIds)
       setManual({ pinyin: word.pinyin !== toPinyin(word.hanzi), example: word.examplePinyin !== toPinyin(word.example, true) })
@@ -92,6 +93,7 @@ export function WordDrawer({ open, onOpenChange, word, defaultTopicId }: Props) 
       example: f.example.trim(),
       examplePinyin: f.examplePinyin.trim(),
       exampleMeaning: f.exampleMeaning.trim(),
+      note: f.note.trim(),
       topicIds,
     })
     if (keepOpen) {
@@ -204,6 +206,17 @@ export function WordDrawer({ open, onOpenChange, word, defaultTopicId }: Props) 
               value={f.exampleMeaning}
               onChange={(e) => setF((s) => ({ ...s, exampleMeaning: e.target.value }))}
               placeholder="Tôi có ba quyển sách."
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="note">Ghi chú</Label>
+            <Textarea
+              id="note"
+              rows={2}
+              value={f.note}
+              onChange={(e) => setF((s) => ({ ...s, note: e.target.value }))}
+              placeholder="Mẹo nhớ, cách dùng, từ dễ nhầm…"
             />
           </div>
 
