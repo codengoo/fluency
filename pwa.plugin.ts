@@ -2,6 +2,7 @@
 // lấy từ chính bundle (tên file có hash). Rút gọn từ chiatien.
 
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import type { Plugin } from 'vite'
 
 const PUBLIC_PRECACHE = ['/favicon.svg', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest']
@@ -17,7 +18,10 @@ export function pwa(): Plugin {
         .filter((f) => f === 'index.html' || (f.startsWith('assets/') && !f.endsWith('.map')))
         .map((f) => (f === 'index.html' ? '/' : `/${f}`))
       const precache = [...new Set([...files, ...PUBLIC_PRECACHE])].sort()
-      const version = createHash('sha256').update(precache.join('\n')).digest('hex').slice(0, 10)
+      // File trong public/ giữ nguyên tên khi đổi nội dung (vd. icon) → băm cả nội dung để VERSION đổi theo.
+      const hash = createHash('sha256').update(precache.join('\n'))
+      for (const f of PUBLIC_PRECACHE) hash.update(readFileSync(new URL(`./public${f}`, import.meta.url)))
+      const version = hash.digest('hex').slice(0, 10)
       const source = serviceWorker(version, precache)
       try {
         new Function(source)
