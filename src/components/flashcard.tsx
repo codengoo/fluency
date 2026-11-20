@@ -11,6 +11,7 @@ import {
   ResponsiveDialogTitle,
 } from '@/components/ui/responsive-dialog'
 import { answer, isDone, startDeck, type Deck } from '@/lib/flashcard'
+import { useHanviet, wordHanviet } from '@/lib/hanviet'
 import type { Word } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { SpeakButton } from './speak-button'
@@ -149,6 +150,8 @@ export default function Flashcard({ open, onOpenChange, words }: Props) {
 
 function Card({ word, front, flipped, onFlip }: { word: Word; front: Front; flipped: boolean; onFlip: () => void }) {
   const hasExample = Boolean(word.example.trim())
+  const hv = useHanviet()
+  const hanviet = hv ? wordHanviet(hv, word.hanzi) : ''
   // Thẻ mới (key đổi) hiện thẳng mặt trước; chỉ chạy hiệu ứng úp lại sau khi đã lật ít nhất một lần.
   const touched = useRef(false)
   if (flipped) touched.current = true
@@ -184,6 +187,7 @@ function Card({ word, front, flipped, onFlip }: { word: Word; front: Front; flip
             <SpeakButton text={word.hanzi} />
           </div>
           <span className="text-xl font-semibold">{word.meaning || '—'}</span>
+          {hanviet && <span className="text-sm tracking-wide text-muted-foreground uppercase">{hanviet}</span>}
           {hasExample && (
             <div className="mt-3 flex w-full items-start gap-2 border-t border-border/70 pt-3 text-left">
               <div className="min-w-0 flex-1 space-y-0.5">

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Fragment } from 'react'
 import { PencilIcon, PenLineIcon } from 'lucide-react'
 import { charPinyins, speak } from '@/lib/chinese'
+import { charReadings, useHanviet, wordHanviet, type CharReading } from '@/lib/hanviet'
 import { hanChars } from '@/lib/strokes'
 import type { Topic, Word } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -24,6 +25,8 @@ export function WordCard({ word, topics, hideMeaning, index = 0, onEdit, onPract
   const reveal = !hideMeaning || open
   const hasExample = Boolean(word.example.trim())
   const tags = topics?.filter((t) => word.topicIds.includes(t.id)) ?? []
+  const hv = useHanviet()
+  const hanviet = useMemo(() => (hv ? wordHanviet(hv, word.hanzi) : ''), [hv, word.hanzi])
 
   return (
     <div
@@ -43,6 +46,9 @@ export function WordCard({ word, topics, hideMeaning, index = 0, onEdit, onPract
         </div>
         <div className="min-w-0 flex-1">
           <p className={cn('truncate font-medium transition-all', !reveal && 'blur-sm select-none')}>{word.meaning || '—'}</p>
+          {hanviet && (
+            <p className={cn('truncate text-xs tracking-wide text-muted-foreground uppercase transition-all', !reveal && 'blur-sm select-none')}>{hanviet}</p>
+          )}
           {tags.length > 0 && (
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
               {tags.map((t, i) => (
@@ -99,44 +105,57 @@ export function WordCard({ word, topics, hideMeaning, index = 0, onEdit, onPract
 
 const MAX_RELATED = 6
 
-/** Từng chữ trong từ + pinyin, kèm các từ khác trong sổ có chữ đó (bấm để nghe). */
+/** Từng chữ trong từ: pinyin, âm Hán Việt, và các từ khác trong sổ có chữ đó (bấm để nghe). */
 function CharBreakdown({ word, charIndex }: { word: Word; charIndex?: Map<string, Word[]> }) {
+  const hv = useHanviet()
   const chars = hanChars(word.hanzi)
   const pys = charPinyins(word.hanzi)
+  const hvs: CharReading[] = hv ? charReadings(hv, word.hanzi) : []
   const seen = new Set<string>()
   const rows = chars
-    .map((c, i) => ({ c, py: pys[i] ?? '', related: (charIndex?.get(c) ?? []).filter((w) => w.id !== word.id) }))
+    .map((c, i) => ({
+      c,
+      py: pys[i] ?? '',
+      hv: hvs[i] ?? { main: [], other: [] },
+      related: (charIndex?.get(c) ?? []).filter((w) => w.id !== word.id),
+    }))
     .filter((r) => !seen.has(r.c) && seen.add(r.c))
-  // Từ một chữ mà chưa có từ nào liên quan thì không có gì để tách.
-  if (rows.length === 0 || (chars.length === 1 && rows[0].related.length === 0)) return null
+  // Không tra được âm Hán Việt và cũng không có từ liên quan thì không có gì để hiện.
+  if (!rows.some((r) => r.hv.main.length || r.related.length)) return null
 
   return (
-    <div className="mt-3 space-y-1.5 border-t border-border/70 pt-3">
-      {rows.map(({ c, py, related }) => (
-        <div key={c} className="flex items-baseline gap-2.5">
-          <span className="flex w-14 shrink-0 items-baseline gap-1">
-            <span className="font-hanzi text-xl">{c}</span>
-            <span className="text-xs text-muted-foreground">{py}</span>
-          </span>
-          {related.length > 0 ? (
-            <span className="flex min-w-0 flex-wrap gap-1">
-              {related.slice(0, MAX_RELATED).map((w) => (
-                <button
-                  key={w.id}
-                  type="button"
-                  onClick={() => speak(w.hanzi)}
-                  title={[w.pinyin, w.meaning].filter(Boolean).join(' · ')}
-                  className="inline-flex items-baseline gap-1 rounded-full bg-muted px-2.5 py-0.5 text-sm hover:bg-muted/70"
-                >
-                  <span className="font-hanzi">{w.hanzi}</span>
-                  {w.meaning && <span className="max-w-28 truncate text-xs text-muted-foreground">{w.meaning}</span>}
-                </button>
-              ))}
-              {related.length > MAX_RELATED && <span className="self-center text-xs text-muted-foreground">+{related.length - MAX_RELATED}</span>}
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">Chưa có từ khác chứa chữ này</span>
-          )}
+    <div className="mt-3 space-y-2 border-t border-border/70 pt-3">
+      {rows.map(({ c, py, hv, related }) => (
+        <div key={c} className="flex items-start gap-3">
+          <span className="font-hanzi text-2xl leading-none">{c}</span>
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="text-sm leading-tight">
+              <span className="text-muted-foreground">{py}</span>
+              {hv.main.length > 0 && <span className="ml-2 font-semibold tracking-wide uppercase">{hv.main.join(', ')}</span>}
+              {hv.other.length > 0 && (
+                <span className="ml-1.5 text-xs text-muted-foreground" title="Cách đọc khác">
+                  ({hv.other.join(', ')})
+                </span>
+              )}
+            </p>
+            {related.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {related.slice(0, MAX_RELATED).map((w) => (
+                  <button
+                    key={w.id}
+                    type="button"
+                    onClick={() => speak(w.hanzi)}
+                    title={[w.pinyin, w.meaning].filter(Boolean).join(' · ')}
+                    className="inline-flex items-baseline gap-1 rounded-full bg-muted px-2.5 py-0.5 text-sm hover:bg-muted/70"
+                  >
+                    <span className="font-hanzi">{w.hanzi}</span>
+                    {w.meaning && <span className="max-w-28 truncate text-xs text-muted-foreground">{w.meaning}</span>}
+                  </button>
+                ))}
+                {related.length > MAX_RELATED && <span className="self-center text-xs text-muted-foreground">+{related.length - MAX_RELATED}</span>}
+              </div>
+            )}
+          </div>
         </div>
       ))}
     </div>

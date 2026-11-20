@@ -6,6 +6,7 @@ Sổ từ vựng tiếng Trung cá nhân (PWA). Mở là dùng, không cần đ�
 - Đọc to bằng Web Speech API (giọng zh-CN của hệ điều hành).
 - Nhóm theo chủ đề (một từ có thể thuộc nhiều chủ đề). Sổ mới có sẵn chủ đề "Số đếm 1–10".
 - Tìm theo chữ Hán / pinyin không dấu / nghĩa; chế độ "Ẩn nghĩa" để tự kiểm tra.
+- Âm Hán Việt theo pinyin (dữ liệu [hanviet-pinyin-words](https://github.com/ph0ngp/hanviet-pinyin-words), MIT; sinh lại bằng `scripts/gen-hanviet.mjs`).
 - Offline-first: dữ liệu nằm trong IndexedDB, đồng bộ nền lên Durable Object.
 
 ## Kiến trúc
