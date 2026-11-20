@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PinyinChart } from './pinyin-chart'
+import { ToneLesson } from './tone-lesson'
 import { cn } from '@/lib/utils'
 
 // Tab Pinyin: Bảng âm / Thanh điệu / Luyện nghe. Phần đang xem nhớ trong localStorage.
@@ -49,7 +50,13 @@ export default function PinyinView() {
       </div>
 
       <div key={section} className="animate-tab-in">
-        {section === 'chart' ? <PinyinChart /> : <p className="rounded-2xl bg-card px-4 py-10 text-center text-muted-foreground">Sắp có</p>}
+        {section === 'chart' ? (
+          <PinyinChart />
+        ) : section === 'tones' ? (
+          <ToneLesson />
+        ) : (
+          <p className="rounded-2xl bg-card px-4 py-10 text-center text-muted-foreground">Sắp có</p>
+        )}
       </div>
 
       <p className="mt-8 text-center text-xs text-muted-foreground">

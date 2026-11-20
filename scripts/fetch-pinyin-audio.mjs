@@ -7,7 +7,7 @@
 //
 // Chạy lại: node scripts/fetch-pinyin-audio.mjs
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 
 const REPO = 'hugolpz/audio-cmn'
 const COMMIT = 'f759a0f18f27690742957619e1248ed91e9b3f2c'
@@ -15,7 +15,7 @@ const RAW = `https://raw.githubusercontent.com/${REPO}/${COMMIT}/24k-abr/`
 const OUT = new URL('../public/audio/', import.meta.url)
 
 const WORDS = [
-  '先生', '学生', '马', '骂', '妈妈', '爸爸', '谢谢', '朋友', '东西',
+  '飞机', '学习', '我', '再见', '妈妈', '爸爸', '谢谢', '朋友', '东西',
   '水果', '可以', '展览', '小姐', '你好',
   '一样', '一定', '一下', '一般', '一边', '一直', '一起',
   '不是', '不对', '不要', '不用', '不同', '不行', '不久', '不少',
@@ -38,6 +38,7 @@ for (const w of WORDS) {
   else missing.push(w)
 }
 
+rmSync(new URL('words/', OUT), { recursive: true, force: true })
 mkdirSync(new URL('syllables/', OUT), { recursive: true })
 mkdirSync(new URL('words/', OUT), { recursive: true })
 let bytes = 0
