@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Fragment } from 'react'
 import { PencilIcon, PenLineIcon } from 'lucide-react'
+import { charPinyins, speak } from '@/lib/chinese'
 import { hanChars } from '@/lib/strokes'
 import type { Topic, Word } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -14,9 +15,11 @@ interface Props {
   index?: number
   onEdit: (w: Word) => void
   onPractice?: (w: Word) => void
+  /** Chữ Hán → các từ trong sổ chứa chữ đó (để tách chữ trong từ). */
+  charIndex?: Map<string, Word[]>
 }
 
-export function WordCard({ word, topics, hideMeaning, index = 0, onEdit, onPractice }: Props) {
+export function WordCard({ word, topics, hideMeaning, index = 0, onEdit, onPractice, charIndex }: Props) {
   const [open, setOpen] = useState(false)
   const reveal = !hideMeaning || open
   const hasExample = Boolean(word.example.trim())
@@ -69,6 +72,7 @@ export function WordCard({ word, topics, hideMeaning, index = 0, onEdit, onPract
           ) : (
             <p className="text-sm text-muted-foreground">Chưa có câu ví dụ.</p>
           )}
+          <CharBreakdown word={word} charIndex={charIndex} />
           <div className="mt-2 flex justify-end gap-1">
             {onPractice && hanChars(word.hanzi).length > 0 && (
               <button
@@ -89,6 +93,52 @@ export function WordCard({ word, topics, hideMeaning, index = 0, onEdit, onPract
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+const MAX_RELATED = 6
+
+/** Từng chữ trong từ + pinyin, kèm các từ khác trong sổ có chữ đó (bấm để nghe). */
+function CharBreakdown({ word, charIndex }: { word: Word; charIndex?: Map<string, Word[]> }) {
+  const chars = hanChars(word.hanzi)
+  const pys = charPinyins(word.hanzi)
+  const seen = new Set<string>()
+  const rows = chars
+    .map((c, i) => ({ c, py: pys[i] ?? '', related: (charIndex?.get(c) ?? []).filter((w) => w.id !== word.id) }))
+    .filter((r) => !seen.has(r.c) && seen.add(r.c))
+  // Từ một chữ mà chưa có từ nào liên quan thì không có gì để tách.
+  if (rows.length === 0 || (chars.length === 1 && rows[0].related.length === 0)) return null
+
+  return (
+    <div className="mt-3 space-y-1.5 border-t border-border/70 pt-3">
+      {rows.map(({ c, py, related }) => (
+        <div key={c} className="flex items-baseline gap-2.5">
+          <span className="flex w-14 shrink-0 items-baseline gap-1">
+            <span className="font-hanzi text-xl">{c}</span>
+            <span className="text-xs text-muted-foreground">{py}</span>
+          </span>
+          {related.length > 0 ? (
+            <span className="flex min-w-0 flex-wrap gap-1">
+              {related.slice(0, MAX_RELATED).map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => speak(w.hanzi)}
+                  title={[w.pinyin, w.meaning].filter(Boolean).join(' · ')}
+                  className="inline-flex items-baseline gap-1 rounded-full bg-muted px-2.5 py-0.5 text-sm hover:bg-muted/70"
+                >
+                  <span className="font-hanzi">{w.hanzi}</span>
+                  {w.meaning && <span className="max-w-28 truncate text-xs text-muted-foreground">{w.meaning}</span>}
+                </button>
+              ))}
+              {related.length > MAX_RELATED && <span className="self-center text-xs text-muted-foreground">+{related.length - MAX_RELATED}</span>}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">Chưa có từ khác chứa chữ này</span>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

@@ -1,9 +1,10 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { ChevronLeftIcon, EyeIcon, EyeOffIcon, PencilIcon, PenLineIcon, PlusIcon, SearchIcon, SettingsIcon, XIcon } from 'lucide-react'
+import { ChevronLeftIcon, EyeIcon, EyeOffIcon, GraduationCapIcon, PencilIcon, PenLineIcon, PlusIcon, SearchIcon, SettingsIcon, XIcon } from 'lucide-react'
 import { Emoji } from '@/components/emoji'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
 import { SettingsDrawer } from '@/components/settings-drawer'
+import { StudyPicker, type StudyMode } from '@/components/study-picker'
 import { SyncBadge } from '@/components/sync-badge'
 import { TopicDrawer } from '@/components/topic-drawer'
 import { WordCard } from '@/components/word-card'
@@ -20,6 +21,8 @@ type Tab = 'topics' | 'words'
 
 // Tải lười: Hanzi Writer chỉ cần khi mở luyện viết.
 const WritingPractice = lazy(() => import('@/components/writing-practice'))
+const Flashcard = lazy(() => import('@/components/flashcard'))
+const ListeningQuiz = lazy(() => import('@/components/listening-quiz'))
 
 // Ba cỡ màn hình (giống chiatien):
 // - Điện thoại (< 640px): một cột, tab Chủ đề / Tất cả từ, nút "Thêm từ" nổi, bảng trượt từ đáy.
@@ -39,6 +42,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   // Luyện viết: danh sách từ chốt lúc mở (không đổi theo ô tìm kiếm khi đang luyện).
   const [practice, setPractice] = useState<{ open: boolean; words: Word[]; start: number }>({ open: false, words: [], start: 0 })
+  // Ôn tập (Flashcard / Nghe & chọn): bảng chọn trước, rồi mở lượt với danh sách từ chốt lúc bắt đầu.
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [study, setStudy] = useState<{ open: boolean; mode: StudyMode; words: Word[] }>({ open: false, mode: 'cards', words: [] })
 
   const topic = topics.find((t) => t.id === topicId) ?? null
 
@@ -69,6 +75,13 @@ export default function App() {
     return m
   }, [words])
 
+  // Chữ Hán → các từ chứa chữ đó (tách chữ trong thẻ từ).
+  const charIndex = useMemo(() => {
+    const m = new Map<string, Word[]>()
+    for (const w of words) for (const c of new Set(hanChars(w.hanzi))) m.set(c, [...(m.get(c) ?? []), w])
+    return m
+  }, [words])
+
   const index = useMemo(
     () => new Map(words.map((w) => [w.id, fold([w.hanzi, w.pinyin, toPinyin(w.hanzi), w.meaning, w.example, w.exampleMeaning].join('|'))])),
     [words],
@@ -86,11 +99,18 @@ export default function App() {
   const practiceList = visibleWords.filter((w) => hanChars(w.hanzi).length > 0)
   const practiceWord = (w: Word) => setPractice({ open: true, words: [w], start: 0 })
   const practiceAll = () => practiceList.length && setPractice({ open: true, words: practiceList, start: 0 })
+  const startStudy = (mode: StudyMode, list: Word[]) => {
+    setPickerOpen(false)
+    setStudy({ open: true, mode, words: list })
+  }
   const addWord = () => setWordDrawer({ open: true, word: null })
   const newTopic = () => setTopicDrawer({ open: true, topic: null })
   const editTopic = () => topic && setTopicDrawer({ open: true, topic })
   // Desktop: chủ đề nằm ở cột trái nên cột phải luôn là danh sách từ.
   const showWords = isDesktop || Boolean(topic) || tab === 'words'
+
+  // Ba nút cạnh ô tìm kiếm: điện thoại chỉ hiện icon để ô tìm kiếm không bị ép.
+  const toolLabel = 'hidden sm:inline'
 
   const wordList = (
     <div key={topic?.id ?? 'all'} className="animate-tab-in">
@@ -115,7 +135,7 @@ export default function App() {
           title="Ẩn nghĩa để tự kiểm tra"
         >
           {hideMeaning ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
-          <span className="hidden min-[380px]:inline">{hideMeaning ? 'Đang ẩn' : 'Ẩn nghĩa'}</span>
+          <span className={toolLabel}>{hideMeaning ? 'Đang ẩn' : 'Ẩn nghĩa'}</span>
         </button>
         <button
           onClick={practiceAll}
@@ -124,7 +144,16 @@ export default function App() {
           title="Luyện viết lần lượt các từ đang hiện"
         >
           <PenLineIcon className="size-4" />
-          <span className="hidden min-[380px]:inline">Luyện viết</span>
+          <span className={toolLabel}>Luyện viết</span>
+        </button>
+        <button
+          onClick={() => setPickerOpen(true)}
+          disabled={visibleWords.length === 0}
+          className="flex h-10 items-center gap-1.5 rounded-xl bg-card px-3 text-sm disabled:opacity-50"
+          title="Ôn tập các từ đang hiện: Flashcard / Nghe & chọn"
+        >
+          <GraduationCapIcon className="size-4" />
+          <span className={toolLabel}>Ôn tập</span>
         </button>
       </div>
 
@@ -137,7 +166,7 @@ export default function App() {
         // Từ màn nhỏ trở lên: 2 cột; items-start để thẻ đang mở không kéo giãn thẻ bên cạnh.
         <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2 sm:gap-3">
           {visibleWords.map((w, i) => (
-            <WordCard key={w.id} word={w} index={i} hideMeaning={hideMeaning} topics={topic ? undefined : topics} onEdit={editWord} onPractice={practiceWord} />
+            <WordCard key={w.id} word={w} index={i} hideMeaning={hideMeaning} topics={topic ? undefined : topics} onEdit={editWord} onPractice={practiceWord} charIndex={charIndex} />
           ))}
         </div>
       )}
@@ -307,6 +336,16 @@ export default function App() {
             startIndex={practice.start}
             onOpenChange={(open) => setPractice((s) => ({ ...s, open }))}
           />
+        </Suspense>
+      )}
+      <StudyPicker open={pickerOpen} onOpenChange={setPickerOpen} words={visibleWords} poolSize={words.length} onStart={startStudy} />
+      {study.words.length > 0 && (
+        <Suspense fallback={null}>
+          {study.mode === 'cards' ? (
+            <Flashcard open={study.open} words={study.words} onOpenChange={(open) => setStudy((s) => ({ ...s, open }))} />
+          ) : (
+            <ListeningQuiz open={study.open} words={study.words} pool={words} onOpenChange={(open) => setStudy((s) => ({ ...s, open }))} />
+          )}
         </Suspense>
       )}
       <Toaster position="top-center" />

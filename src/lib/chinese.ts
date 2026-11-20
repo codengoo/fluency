@@ -22,6 +22,12 @@ export function toPinyin(text: string, sentence = false) {
   return out
 }
 
+/** Pinyin từng chữ Hán trong từ (đọc theo ngữ cảnh cả từ, vd. 银行 → yín, háng), khớp thứ tự với hanChars. */
+export function charPinyins(text: string) {
+  const han = Array.from(text).filter((c) => HAN.test(c)).join('')
+  return han ? pinyin(han, { toneType: 'symbol', type: 'array' }) : []
+}
+
 const PUNCT: Record<string, string> = { '，': ',', '。': '.', '！': '!', '？': '?', '、': ',', '；': ';', '：': ':', '（': '(', '）': ')', '“': '"', '”': '"' }
 function toAsciiPunct(p: string) {
   return PUNCT[p] ?? p
