@@ -42,6 +42,8 @@ const STATIC_CACHE = 'static-' + VERSION
 // nên cache lâu dài (không xoá theo VERSION) để dùng được khi offline.
 const CDN_CACHE = 'cdn-v1'
 const CDN_ORIGIN = 'https://cdn.jsdelivr.net'
+// Âm thanh pinyin (/audio/…): ~1700 file nhỏ, chỉ cache file đã nghe; nội dung không đổi nên giữ qua các VERSION.
+const AUDIO_CACHE = 'audio-v1'
 const MATCH = { ignoreVary: true }
 
 self.addEventListener('install', (event) => {
@@ -67,6 +69,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
   // API đồng bộ: luôn đi mạng (dữ liệu offline đã nằm trong IndexedDB).
   if (url.pathname.startsWith('/api/')) return
+  if (url.pathname.startsWith('/audio/')) return event.respondWith(audioCacheFirst(request))
   // Trang: ưu tiên mạng để lấy bản mới, mất mạng thì dùng bản đã cache.
   if (request.mode === 'navigate') return event.respondWith(networkFirst(request, '/'))
   event.respondWith(cacheFirst(request))
@@ -92,6 +95,16 @@ async function cdnCacheFirst(request) {
   const response = await fetch(request)
   // Ảnh <img> không CORS về dạng opaque (status 0) – vẫn cache được.
   if (response.ok || response.type === 'opaque') cache.put(request, response.clone())
+  return response
+}
+
+async function audioCacheFirst(request) {
+  const cache = await caches.open(AUDIO_CACHE)
+  const cached = await cache.match(request, MATCH)
+  if (cached) return cached
+  const response = await fetch(request)
+  // File không có → Worker trả index.html (SPA): không cache.
+  if (response.ok && (response.headers.get('content-type') || '').startsWith('audio/')) cache.put(request, response.clone())
   return response
 }
 
