@@ -42,11 +42,11 @@ export function SummaryActions({ deck, allIds, onRestart }: { deck: Deck; allIds
   return (
     <div className="flex flex-col gap-2 sm:flex-row">
       {hasMissed && (
-        <Button variant="brand" size="lg" className="h-12 flex-1" onClick={() => onRestart(deck.missed)}>
+        <Button variant="brand" size="lg" className="sm:flex-1" onClick={() => onRestart(deck.missed)}>
           <RotateCcwIcon /> Ôn {deck.missed.length} từ chưa thuộc
         </Button>
       )}
-      <Button variant={hasMissed ? 'secondary' : 'brand'} size="lg" className="h-12 flex-1" onClick={() => onRestart(allIds)}>
+      <Button variant={hasMissed ? 'secondary' : 'brand'} size="lg" className="sm:flex-1" onClick={() => onRestart(allIds)}>
         <ShuffleIcon /> Học lại
       </Button>
     </div>
