@@ -124,7 +124,11 @@ export const isSyllable = (syllable: string) => RECORDED.has(fileKey(syllable))
 
 /** Ô của bảng âm: mỗi vần ghép được với âm đầu này. */
 export function syllablesOf(initial: string) {
-  return FINALS.map((f) => ({ final: f, syllable: spell(initial, f.id) })).filter((c) => isSyllable(c.syllable))
+  // j q x chỉ ghép với vần ü (viết u): ju là jü, không phải j + u.
+  const jqx = /^[jqx]$/.test(initial)
+  return FINALS.filter((f) => !(jqx && f.row === 'u'))
+    .map((f) => ({ final: f, syllable: spell(initial, f.id) }))
+    .filter((c) => isSyllable(c.syllable))
 }
 
 const MARKS: Record<string, string> = { a: 'āáǎà', e: 'ēéěè', i: 'īíǐì', o: 'ōóǒò', u: 'ūúǔù', ü: 'ǖǘǚǜ' }

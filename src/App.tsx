@@ -17,12 +17,13 @@ import type { Topic, Word } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toPinyin } from '@/lib/chinese'
 
-type Tab = 'topics' | 'words'
+type Tab = 'topics' | 'words' | 'pinyin'
 
 // Tải lười: Hanzi Writer chỉ cần khi mở luyện viết.
 const WritingPractice = lazy(() => import('@/components/writing-practice'))
 const Flashcard = lazy(() => import('@/components/flashcard'))
 const ListeningQuiz = lazy(() => import('@/components/listening-quiz'))
+const PinyinView = lazy(() => import('@/components/pinyin-view'))
 
 // Ba cỡ màn hình (giống chiatien):
 // - Điện thoại (< 640px): một cột, tab Chủ đề / Tất cả từ, nút "Thêm từ" nổi, bảng trượt từ đáy.
@@ -106,8 +107,14 @@ export default function App() {
   const addWord = () => setWordDrawer({ open: true, word: null })
   const newTopic = () => setTopicDrawer({ open: true, topic: null })
   const editTopic = () => topic && setTopicDrawer({ open: true, topic })
-  // Desktop: chủ đề nằm ở cột trái nên cột phải luôn là danh sách từ.
+  const showPinyin = tab === 'pinyin' && !topic
+  // Desktop: chủ đề nằm ở cột trái nên cột phải là danh sách từ (trừ khi đang ở Pinyin).
   const showWords = isDesktop || Boolean(topic) || tab === 'words'
+  const pinyinView = (
+    <Suspense fallback={null}>
+      <PinyinView />
+    </Suspense>
+  )
 
   // Ba nút cạnh ô tìm kiếm: điện thoại chỉ hiện icon để ô tìm kiếm không bị ép.
   const toolLabel = 'hidden sm:inline'
@@ -198,13 +205,34 @@ export default function App() {
           <div className="grid grid-cols-[260px_minmax(0,1fr)] items-start gap-8">
             {/* Cột trái: điều hướng chủ đề, bám theo khi cuộn danh sách từ. */}
             <nav className="sticky top-6 flex max-h-[calc(100dvh-3rem)] flex-col gap-1 overflow-y-auto no-scrollbar">
-              <SideItem active={!topic} onClick={() => topic && closeTopic()} emoji="📖" label="Tất cả từ" count={words.length} />
+              <SideItem
+                active={showPinyin}
+                onClick={() => {
+                  setTab('pinyin')
+                  if (topic) closeTopic()
+                }}
+                emoji="🔤"
+                label="Pinyin"
+              />
+              <SideItem
+                active={!topic && !showPinyin}
+                onClick={() => {
+                  setTab('words')
+                  if (topic) closeTopic()
+                }}
+                emoji="📖"
+                label="Tất cả từ"
+                count={words.length}
+              />
               <p className="mt-4 mb-1 px-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Chủ đề</p>
               {topics.map((t) => (
                 <SideItem
                   key={t.id}
                   active={t.id === topicId}
-                  onClick={() => t.id !== topicId && openTopic(t.id)}
+                  onClick={() => {
+                    setTab('words')
+                    if (t.id !== topicId) openTopic(t.id)
+                  }}
                   emoji={t.emoji}
                   label={t.name}
                   count={counts.get(t.id) ?? 0}
@@ -221,7 +249,9 @@ export default function App() {
             <main className="min-w-0">
               <div className="mb-4 flex h-10 items-center gap-2">
                 <h2 className="min-w-0 flex-1 truncate text-xl font-bold">
-                  {topic ? (
+                  {showPinyin ? (
+                    'Pinyin'
+                  ) : topic ? (
                     <>
                       <Emoji char={topic.emoji} className="mr-1.5" />
                       {topic.name}
@@ -229,7 +259,7 @@ export default function App() {
                   ) : (
                     'Tất cả từ'
                   )}
-                  <span className="ml-2 text-base font-normal text-muted-foreground">{visibleWords.length} từ</span>
+                  {!showPinyin && <span className="ml-2 text-base font-normal text-muted-foreground">{visibleWords.length} từ</span>}
                 </h2>
                 {topic && (
                   <Button variant="ghost" onClick={editTopic}>
@@ -237,7 +267,7 @@ export default function App() {
                   </Button>
                 )}
               </div>
-              {ready && wordList}
+              {showPinyin ? pinyinView : ready && wordList}
             </main>
           </div>
         </>
@@ -263,20 +293,22 @@ export default function App() {
           </header>
 
           {!topic && (
-            <div className="mb-4 grid grid-cols-2 rounded-xl bg-muted p-1 text-sm font-medium sm:max-w-sm">
-              {(['topics', 'words'] as const).map((t) => (
+            <div className="mb-4 grid grid-cols-3 rounded-xl bg-muted p-1 text-sm font-medium sm:max-w-md">
+              {(['topics', 'words', 'pinyin'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
                   className={cn('rounded-lg py-2 transition-all', tab === t ? 'bg-card shadow-sm' : 'text-muted-foreground')}
                 >
-                  {t === 'topics' ? `Chủ đề (${topics.length})` : `Tất cả từ (${words.length})`}
+                  {t === 'topics' ? `Chủ đề (${topics.length})` : t === 'words' ? `Tất cả từ (${words.length})` : 'Pinyin'}
                 </button>
               ))}
             </div>
           )}
 
-          {!ready ? null : showWords ? (
+          {showPinyin ? (
+            pinyinView
+          ) : !ready ? null : showWords ? (
             wordList
           ) : (
             <div className="animate-tab-in grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -304,13 +336,15 @@ export default function App() {
             </div>
           )}
 
-          {/* Nút nổi bám mép phải khung nội dung: max-w-lg (điện thoại) / max-w-3xl (màn nhỏ). */}
-          <button
-            onClick={addWord}
-            className="fixed right-[max(1.25rem,calc(50%-15rem))] bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-40 flex h-14 items-center gap-2 rounded-full bg-brand px-5 font-semibold text-brand-foreground shadow-lg shadow-brand/30 transition-transform active:scale-95 sm:right-[max(1.5rem,calc(50%-22.5rem))]"
-          >
-            <PlusIcon className="size-5" /> Thêm từ
-          </button>
+          {/* Nút nổi bám mép phải khung nội dung: max-w-lg (điện thoại) / max-w-3xl (màn nhỏ). Ẩn ở tab Pinyin. */}
+          {!showPinyin && (
+            <button
+              onClick={addWord}
+              className="fixed right-[max(1.25rem,calc(50%-15rem))] bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-40 flex h-14 items-center gap-2 rounded-full bg-brand px-5 font-semibold text-brand-foreground shadow-lg shadow-brand/30 transition-transform active:scale-95 sm:right-[max(1.5rem,calc(50%-22.5rem))]"
+            >
+              <PlusIcon className="size-5" /> Thêm từ
+            </button>
+          )}
         </>
       )}
 
@@ -353,7 +387,7 @@ export default function App() {
   )
 }
 
-function SideItem({ active, onClick, emoji, label, count }: { active: boolean; onClick: () => void; emoji: string; label: string; count: number }) {
+function SideItem({ active, onClick, emoji, label, count }: { active: boolean; onClick: () => void; emoji: string; label: string; count?: number }) {
   return (
     <button
       onClick={onClick}
