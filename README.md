@@ -25,5 +25,8 @@ Sổ từ vựng tiếng Trung cá nhân (PWA). Mở là dùng, không cần đ�
 ```bash
 npm install
 npm run dev       # http://localhost:5173 (frontend + Worker + DO chạy local, dữ liệu ở .wrangler/)
-npm run deploy    # build + deploy lên Cloudflare (*.workers.dev)
+npm run deploy    # build + deploy lên Cloudflare (https://fluency.cangao.asia)
 ```
+
+Deploy dùng tài khoản Cloudflare của chiatien: `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` trong `.env`
+(không commit; wrangler tự đọc, ưu tiên hơn `wrangler login`).

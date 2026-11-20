@@ -2,12 +2,20 @@ import { useEffect, useState } from 'react'
 import { Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { removeTopic, saveTopic } from '@/lib/store'
 import type { Topic } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { Emoji } from './emoji'
 
 const EMOJIS = ['📚', '🔢', '👋', '🍜', '🏠', '👪', '🎨', '⏰', '🚗', '💼', '🛒', '🌤️', '🐼', '❤️', '🏥', '✈️']
 
@@ -44,13 +52,14 @@ export function TopicDrawer({ open, onOpenChange, topic, onDeleted, onCreated }:
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="mx-auto max-w-lg">
-        <DrawerHeader className="text-left">
-          <DrawerTitle className="text-lg">{topic ? 'Sửa chủ đề' : 'Chủ đề mới'}</DrawerTitle>
-        </DrawerHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{topic ? 'Sửa chủ đề' : 'Chủ đề mới'}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody>
         <form
-          className="flex flex-col gap-4 px-5"
+          className="flex flex-col gap-4 pb-4"
           onSubmit={(e) => {
             e.preventDefault()
             submit()
@@ -68,15 +77,16 @@ export function TopicDrawer({ open, onOpenChange, topic, onDeleted, onCreated }:
                   key={e}
                   type="button"
                   onClick={() => setEmoji(e)}
-                  className={cn('aspect-square rounded-xl text-xl transition-colors', emoji === e ? 'bg-brand/15 ring-2 ring-brand' : 'bg-muted hover:bg-muted/70')}
+                  className={cn('flex aspect-square items-center justify-center rounded-xl transition-colors', emoji === e ? 'bg-brand/15 ring-2 ring-brand' : 'bg-muted hover:bg-muted/70')}
                 >
-                  {e}
+                  <Emoji char={e} className="size-6" />
                 </button>
               ))}
             </div>
           </div>
         </form>
-        <DrawerFooter className="pb-[max(1rem,env(safe-area-inset-bottom))]">
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
           <div className="flex gap-2">
             {topic && (
               <Button type="button" variant="destructive" size="lg" className="h-12" onClick={remove} aria-label="Xóa chủ đề">
@@ -87,8 +97,8 @@ export function TopicDrawer({ open, onOpenChange, topic, onDeleted, onCreated }:
               Lưu
             </Button>
           </div>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

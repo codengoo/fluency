@@ -2,7 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { PlusIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,6 +18,7 @@ import { hasHanzi, toPinyin } from '@/lib/chinese'
 import { removeRecord, saveTopic, saveWord, useStore } from '@/lib/store'
 import type { Word } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { Emoji } from './emoji'
 import { SpeakButton } from './speak-button'
 
 interface Props {
@@ -104,15 +113,16 @@ export function WordDrawer({ open, onOpenChange, word, defaultTopicId }: Props) 
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="mx-auto max-w-lg">
-        <DrawerHeader className="text-left">
-          <DrawerTitle className="text-lg">{word ? 'Sửa từ' : 'Thêm từ mới'}</DrawerTitle>
-          <DrawerDescription>Pinyin tự sinh khi gõ chữ Hán, sửa tay được.</DrawerDescription>
-        </DrawerHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{word ? 'Sửa từ' : 'Thêm từ mới'}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>Pinyin tự sinh khi gõ chữ Hán, sửa tay được.</ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
+        <ResponsiveDialogBody>
         <form
-          className="sheet-stagger flex flex-col gap-4 overflow-y-auto px-5 pb-2"
+          className="sheet-stagger flex flex-col gap-4 pb-4"
           onSubmit={(e) => {
             e.preventDefault()
             submit(false)
@@ -210,7 +220,8 @@ export function WordDrawer({ open, onOpenChange, word, defaultTopicId }: Props) 
                     topicIds.includes(t.id) ? 'border-brand bg-brand text-brand-foreground' : 'bg-background hover:bg-muted',
                   )}
                 >
-                  {t.emoji} {t.name}
+                  <Emoji char={t.emoji} className="mr-1" />
+                  {t.name}
                 </button>
               ))}
               {newTopic === null ? (
@@ -242,8 +253,9 @@ export function WordDrawer({ open, onOpenChange, word, defaultTopicId }: Props) 
           </div>
           <button type="submit" hidden />
         </form>
+        </ResponsiveDialogBody>
 
-        <DrawerFooter className="pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <ResponsiveDialogFooter>
           <div className="flex gap-2">
             {word ? (
               <Button type="button" variant="destructive" size="lg" className="h-12" onClick={remove} aria-label="Xóa từ">
@@ -258,9 +270,9 @@ export function WordDrawer({ open, onOpenChange, word, defaultTopicId }: Props) 
               {word ? 'Lưu thay đổi' : 'Lưu'}
             </Button>
           </div>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }
 

@@ -3,10 +3,18 @@ import { CopyIcon, DownloadIcon, RefreshCwIcon, UploadIcon } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog'
 import { Input } from '@/components/ui/input'
 import { exportJson, importJson, shareLink, switchLibrary, syncNow, useStore } from '@/lib/store'
 import { SyncBadge } from './sync-badge'
+import { VoiceSettings } from './voice-settings'
 
 export function SettingsDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { words, topics, lastSyncAt, pending } = useStore()
@@ -15,16 +23,16 @@ export function SettingsDrawer({ open, onOpenChange }: { open: boolean; onOpenCh
   const link = shareLink()
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="mx-auto max-w-lg">
-        <DrawerHeader className="text-left">
-          <DrawerTitle className="text-lg">Đồng bộ & sao lưu</DrawerTitle>
-          <DrawerDescription>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Cài đặt</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {words.length} từ · {topics.length} chủ đề
-          </DrawerDescription>
-        </DrawerHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
-        <div className="sheet-stagger flex flex-col gap-5 overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <ResponsiveDialogBody className="sheet-stagger flex flex-col gap-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <section className="flex items-center justify-between rounded-2xl bg-muted/60 px-4 py-3">
             <div>
               <SyncBadge showLabel />
@@ -74,6 +82,8 @@ export function SettingsDrawer({ open, onOpenChange }: { open: boolean; onOpenCh
             </div>
           </section>
 
+          <VoiceSettings />
+
           <section className="space-y-2">
             <h3 className="text-sm font-semibold">Sao lưu</h3>
             <div className="grid grid-cols-2 gap-2">
@@ -102,8 +112,8 @@ export function SettingsDrawer({ open, onOpenChange }: { open: boolean; onOpenCh
               }}
             />
           </section>
-        </div>
-      </DrawerContent>
-    </Drawer>
+        </ResponsiveDialogBody>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

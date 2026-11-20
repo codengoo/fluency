@@ -34,6 +34,10 @@ function serviceWorker(version: string, precache: string[]) {
 const VERSION = '${version}'
 const PRECACHE = ${JSON.stringify(precache)}
 const STATIC_CACHE = 'static-' + VERSION
+// Dữ liệu nét chữ (luyện viết) + ảnh emoji Noto trên jsDelivr: URL có ghim phiên bản, không đổi nội dung,
+// nên cache lâu dài (không xoá theo VERSION) để dùng được khi offline.
+const CDN_CACHE = 'cdn-v1'
+const CDN_ORIGIN = 'https://cdn.jsdelivr.net'
 const MATCH = { ignoreVary: true }
 
 self.addEventListener('install', (event) => {
@@ -55,6 +59,7 @@ self.addEventListener('fetch', (event) => {
   const request = event.request
   if (request.method !== 'GET') return
   const url = new URL(request.url)
+  if (url.origin === CDN_ORIGIN) return event.respondWith(cdnCacheFirst(request))
   if (url.origin !== self.location.origin) return
   // API đồng bộ: luôn đi mạng (dữ liệu offline đã nằm trong IndexedDB).
   if (url.pathname.startsWith('/api/')) return
@@ -74,6 +79,16 @@ async function networkFirst(request, cacheKey) {
     if (cached) return cached
     throw err
   }
+}
+
+async function cdnCacheFirst(request) {
+  const cache = await caches.open(CDN_CACHE)
+  const cached = await cache.match(request, MATCH)
+  if (cached) return cached
+  const response = await fetch(request)
+  // Ảnh <img> không CORS về dạng opaque (status 0) – vẫn cache được.
+  if (response.ok || response.type === 'opaque') cache.put(request, response.clone())
+  return response
 }
 
 async function cacheFirst(request) {
