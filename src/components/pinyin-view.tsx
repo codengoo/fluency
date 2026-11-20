@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PinyinChart } from './pinyin-chart'
+import { PinyinDrill } from './pinyin-drill'
 import { ToneLesson } from './tone-lesson'
 import { cn } from '@/lib/utils'
 
@@ -55,7 +56,7 @@ export default function PinyinView() {
         ) : section === 'tones' ? (
           <ToneLesson />
         ) : (
-          <p className="rounded-2xl bg-card px-4 py-10 text-center text-muted-foreground">Sắp có</p>
+          <PinyinDrill />
         )}
       </div>
 

@@ -80,3 +80,10 @@ Thêm luyện nghe phân biệt pinyin: thanh, âm đầu, vần
 src/lib/pinyin-drill.ts sinh câu hỏi từ các nhóm dễ nhầm (zh/z/j, an/ang, u/ü…);
 PinyinDrill chạy lượt kiểu Nghe & chọn, sai thì gặp lại cuối lượt, có tổng kết.
 ```
+
+## 8. Khác với bản kế hoạch (ghi lại sau khi làm)
+
+- Phần chọn kiểu + số câu nằm luôn trong `pinyin-drill.tsx` (`PinyinDrill`); `pinyin-view.tsx` chỉ render `<PinyinDrill />`.
+  Không tải lười riêng vì `pinyin-view` đã là chunk tải lười.
+- Sau khi chọn đáp án, bấm lựa chọn nào thì nghe lựa chọn đó để so sánh (thay cho ghi chú "nghe ở phần tổng kết").
+- `update()` của lựa chọn dùng setState dạng hàm: bấm nhanh hai lựa chọn liên tiếp không ghi đè nhau.
