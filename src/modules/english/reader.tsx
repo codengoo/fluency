@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeftIcon, PauseIcon, PencilIcon, PlayIcon, Repeat1Icon, SkipBackIcon, SkipForwardIcon, SlidersHorizontalIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { canSpeakEn, englishVoices, setEnTts, speakEn, stopEn, useEnTts } from '@/lib/english-tts'
@@ -8,6 +8,18 @@ import { cn } from '@/lib/utils'
 import { EnglishVoiceDialog } from './voice-dialog'
 
 const SPEEDS = [0.6, 0.75, 0.9, 1, 1.15, 1.3]
+
+/** Câu → các mảnh (từ / khoảng trắng) kèm vị trí ký tự, để tìm đúng từ mà giọng đọc báo về. */
+function tokenize(text: string) {
+  const out: { text: string; start: number; end: number; space: boolean }[] = []
+  for (const m of text.matchAll(/\s+|\S+/g)) {
+    out.push({ text: m[0], start: m.index, end: m.index + m[0].length, space: /^\s/.test(m[0]) })
+  }
+  return out
+}
+
+/** Thời gian ô tô màu trượt sang từ kế tiếp (đủ ngắn để kịp nhịp đọc). */
+const SLIDE = '220ms cubic-bezier(0.4, 0, 0.2, 1)'
 
 interface Props {
   reading: Reading
@@ -38,6 +50,50 @@ export function Reader({ reading, onBack, onEdit }: Props) {
   const repeatRef = useRef(repeat)
   repeatRef.current = repeat
   const sentenceEls = useRef(new Map<number, HTMLElement>())
+
+  // Tô từ đang đọc: một ô màu duy nhất nằm dưới chữ, trượt từ từ này sang từ kế tiếp
+  // (thay vì dựng lại <mark> mỗi từ, gây giật). Xuống dòng thì nhảy thẳng, không quét chéo qua cả dòng.
+  const articleRef = useRef<HTMLElement>(null)
+  const highlightRef = useRef<HTMLDivElement>(null)
+  const tokenEls = useRef<(HTMLSpanElement | null)[]>([])
+  const lastTop = useRef<number | null>(null)
+  const curTokens = useMemo(() => tokenize(sentences[cur]?.text ?? ''), [sentences, cur])
+  const activeToken = word ? curTokens.findIndex((t) => !t.space && word[0] >= t.start && word[0] < t.end) : -1
+
+  const placeHighlight = useCallback(() => {
+    const hl = highlightRef.current
+    const article = articleRef.current
+    if (!hl || !article) return
+    const el = activeToken >= 0 ? tokenEls.current[activeToken] : null
+    if (!el) {
+      hl.style.opacity = '0'
+      lastTop.current = null
+      return
+    }
+    const a = article.getBoundingClientRect()
+    const r = el.getBoundingClientRect()
+    const x = r.left - a.left - 3
+    const y = r.top - a.top - 1
+    const sameLine = lastTop.current !== null && Math.abs(lastTop.current - y) < 4
+    hl.style.transition = sameLine ? `transform ${SLIDE}, width ${SLIDE}, height ${SLIDE}, opacity 120ms ease-out` : 'opacity 120ms ease-out'
+    hl.style.transform = `translate(${x}px, ${y}px)`
+    hl.style.width = `${r.width + 6}px`
+    hl.style.height = `${r.height + 2}px`
+    hl.style.opacity = '1'
+    lastTop.current = y
+  }, [activeToken])
+
+  useLayoutEffect(placeHighlight, [placeHighlight, cur])
+
+  // Đổi cỡ màn hình / xoay máy: chữ xuống dòng khác → đặt lại ô màu (không trượt).
+  useEffect(() => {
+    const onResize = () => {
+      lastTop.current = null
+      placeHighlight()
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [placeHighlight])
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const words = wordCount(reading.text)
@@ -138,7 +194,14 @@ export function Reader({ reading, onBack, onEdit }: Props) {
         </button>
       </header>
 
-      <article lang="en" className="space-y-4 rounded-2xl bg-card px-5 py-5 text-lg leading-relaxed sm:px-7 sm:py-6 sm:text-xl sm:leading-relaxed">
+      {/* Điện thoại: chữ nằm thẳng trên nền trang, không khung; từ màn nhỏ trở lên mới có khung.
+          isolate + -z-10: ô tô màu nằm trên nền khung nhưng dưới chữ. */}
+      <article
+        ref={articleRef}
+        lang="en"
+        className="relative isolate space-y-4 text-lg leading-relaxed sm:rounded-2xl sm:bg-card sm:px-7 sm:py-6 sm:text-xl sm:leading-relaxed"
+      >
+        <div ref={highlightRef} aria-hidden className="pointer-events-none absolute top-0 left-0 -z-10 rounded-md bg-brand opacity-0 shadow-sm shadow-brand/30" />
         {paragraphs.map((para, pi) => (
           <p key={pi}>
             {para.map((s) => (
@@ -154,15 +217,23 @@ export function Reader({ reading, onBack, onEdit }: Props) {
                     s.index === cur ? 'bg-brand/15' : 'hover:bg-muted',
                   )}
                 >
-                  {s.index === cur && word ? (
-                    <>
-                      {s.text.slice(0, word[0])}
-                      <mark className="rounded bg-brand px-0.5 text-brand-foreground">{s.text.slice(word[0], word[1])}</mark>
-                      {s.text.slice(word[1])}
-                    </>
-                  ) : (
-                    s.text
-                  )}
+                  {s.index === cur
+                    ? curTokens.map((t, ti) =>
+                        t.space ? (
+                          t.text
+                        ) : (
+                          <span
+                            key={ti}
+                            ref={(el) => {
+                              tokenEls.current[ti] = el
+                            }}
+                            className={cn('transition-colors duration-150', ti === activeToken && 'text-brand-foreground')}
+                          >
+                            {t.text}
+                          </span>
+                        ),
+                      )
+                    : s.text}
                 </span>{' '}
               </Fragment>
             ))}

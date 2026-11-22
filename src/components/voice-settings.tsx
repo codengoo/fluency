@@ -2,6 +2,8 @@ import { useState, useSyncExternalStore } from 'react'
 import { RotateCcwIcon, Volume2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { NativeSelect } from '@/components/ui/native-select'
+import { SliderField } from '@/components/ui/slider'
 import {
   autoVoiceName,
   canSpeak,
@@ -15,40 +17,6 @@ import {
 } from '@/lib/chinese'
 
 const SAMPLE = '你好，我在学习中文。'
-
-function Slider({
-  label,
-  value,
-  min,
-  max,
-  step,
-  onChange,
-}: {
-  label: string
-  value: number
-  min: number
-  max: number
-  step: number
-  onChange: (v: number) => void
-}) {
-  return (
-    <label className="block space-y-1">
-      <span className="flex justify-between text-xs text-muted-foreground">
-        <span>{label}</span>
-        <span className="font-mono tabular-nums">{value.toFixed(2)}</span>
-      </span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-brand"
-      />
-    </label>
-  )
-}
 
 export function VoiceSettings() {
   const tts = useSyncExternalStore(subscribeTts, getTtsSettings)
@@ -79,11 +47,10 @@ export function VoiceSettings() {
       </div>
 
       <label className="block space-y-1">
-        <span className="text-xs text-muted-foreground">Giọng</span>
-        <select
+        <span className="text-sm font-medium">Giọng</span>
+        <NativeSelect
           value={tts.voiceURI}
           onChange={(e) => set({ voiceURI: e.target.value })}
-          className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
         >
           <option value="">Tự động{auto ? ` (${auto})` : ''}</option>
           {zh.length > 0 && (
@@ -105,7 +72,7 @@ export function VoiceSettings() {
               ))}
             </optgroup>
           )}
-        </select>
+        </NativeSelect>
         {zh.length === 0 && (
           <span className="block text-xs text-amber-600">
             Máy chưa có giọng tiếng Trung — cài "Chinese (Simplified)" trong cài đặt giọng nói của hệ điều hành.
@@ -113,9 +80,9 @@ export function VoiceSettings() {
         )}
       </label>
 
-      <Slider label="Tốc độ" value={tts.rate} min={0.3} max={1.5} step={0.05} onChange={(rate) => set({ rate })} />
-      <Slider label="Cao độ" value={tts.pitch} min={0.5} max={1.5} step={0.05} onChange={(pitch) => set({ pitch })} />
-      <Slider label="Âm lượng" value={tts.volume} min={0.1} max={1} step={0.05} onChange={(volume) => set({ volume })} />
+      <SliderField format={(v) => `${v.toFixed(2)}×`} label="Tốc độ" value={tts.rate} min={0.3} max={1.5} step={0.05} onChange={(rate) => set({ rate })} />
+      <SliderField label="Cao độ" value={tts.pitch} min={0.5} max={1.5} step={0.05} onChange={(pitch) => set({ pitch })} />
+      <SliderField format={(v) => `${Math.round(v * 100)}%`} label="Âm lượng" value={tts.volume} min={0.1} max={1} step={0.05} onChange={(volume) => set({ volume })} />
 
       <div className="flex gap-2">
         <Input value={sample} onChange={(e) => setSample(e.target.value)} placeholder="Câu nghe thử…" />

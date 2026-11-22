@@ -1,6 +1,8 @@
 import { Volume2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { NativeSelect } from '@/components/ui/native-select'
+import { SliderField } from '@/components/ui/slider'
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -31,11 +33,10 @@ export function EnglishVoiceDialog({ open, onOpenChange }: { open: boolean; onOp
           ) : (
             <div className="space-y-1.5">
               <Label htmlFor="en-voice">Giọng</Label>
-              <select
+              <NativeSelect
                 id="en-voice"
                 value={settings.voiceURI}
                 onChange={(e) => setEnTts({ voiceURI: e.target.value })}
-                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
               >
                 <option value="">Tự động ({voices[0]?.name})</option>
                 {voices.map((v) => (
@@ -43,26 +44,11 @@ export function EnglishVoiceDialog({ open, onOpenChange }: { open: boolean; onOp
                     {v.name} · {v.lang}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="en-rate">Tốc độ</Label>
-              <span className="text-sm text-muted-foreground tabular-nums">{settings.rate.toFixed(2)}×</span>
-            </div>
-            <input
-              id="en-rate"
-              type="range"
-              min={0.5}
-              max={1.5}
-              step={0.05}
-              value={settings.rate}
-              onChange={(e) => setEnTts({ rate: Number(e.target.value) })}
-              className="w-full accent-[var(--brand)]"
-            />
-          </div>
+          <SliderField label="Tốc độ" value={settings.rate} min={0.5} max={1.5} step={0.05} onChange={(rate) => setEnTts({ rate })} format={(v) => `${v.toFixed(2)}×`} />
 
           <Button variant="outline" onClick={() => speakEn(SAMPLE)}>
             <Volume2Icon /> Nghe thử
