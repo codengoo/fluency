@@ -1,7 +1,8 @@
-// Dữ liệu mẫu: chủ đề "Số đếm 1–10" và "Gia đình".
+// Dữ liệu mẫu: chủ đề "Số đếm 1–10", "Gia đình" và các bài đọc tiếng Anh.
 // id cố định + updatedAt = 1 → đồng bộ nhiều máy không bị nhân đôi, và mọi chỉnh sửa thật đều thắng.
 // Sổ cũ cũng được bổ sung các bản ghi mẫu còn thiếu (xem init() trong store.ts).
 
+import SEED_READINGS from './seed-readings.json'
 import type { Rec } from './types'
 
 type Row = [hanzi: string, pinyin: string, meaning: string, example: string, examplePinyin: string, exampleMeaning: string, note?: string]
@@ -44,12 +45,23 @@ const TOPICS: { id: string; prefix: string; name: string; emoji: string; rows: R
   { id: 'seed-family', prefix: 'seed-family-', name: 'Gia đình', emoji: '👪', rows: FAMILY },
 ]
 
-// Bài đọc tiếng Anh mẫu (tự viết) cho module tiếng Anh.
-const SAMPLE_READING = `Every morning, Lan takes the bus to work. The ride is about forty minutes long, so she uses the time to learn English. She puts on her headphones, opens a short article, and listens to it twice.
+// Bài đọc tiếng Anh dùng chung (module tiếng Anh). Nội dung ở seed-readings.json.
+// Thứ tự trong file = thứ tự hiện (bài đầu file lên đầu danh sách); bài người dùng tự thêm (createdAt = Date.now()) luôn nằm trên.
+const READINGS = SEED_READINGS.map((r, i) => ({
+  id: r.id,
+  kind: 'reading' as const,
+  lang: 'en' as const,
+  title: r.title,
+  text: r.text,
+  createdAt: SEED_READINGS.length - i,
+  updatedAt: 1,
+}))
 
-The first time, she just listens and tries to understand the main idea. The second time, she reads along and repeats each sentence quietly. When she finds a new word, she writes it in a small notebook.
-
-At first, it was hard. Many words sounded different from what she expected. But after a few months, she noticed something surprising: she could follow conversations at work much more easily. Small habits, repeated every day, had made a big difference.`
+/**
+ * Bản ghi mẫu đã bỏ khỏi seed. Sổ nào còn bản chưa sửa (updatedAt <= 1) thì xóa đi (xem init() trong store.ts);
+ * bản người dùng đã sửa thì giữ nguyên.
+ */
+export const RETIRED_SEED_IDS = ['seed-reading-1']
 
 export function seedRecords(): Rec[] {
   return [...TOPICS.flatMap((t, ti) => [
@@ -69,6 +81,6 @@ export function seedRecords(): Rec[] {
       updatedAt: 1,
     })),
   ]),
-    { id: 'seed-reading-1', kind: 'reading' as const, lang: 'en' as const, title: 'Learning on the bus', text: SAMPLE_READING, createdAt: 1, updatedAt: 1 },
+    ...READINGS,
   ]
 }

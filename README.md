@@ -14,6 +14,7 @@ Học ngoại ngữ cá nhân (PWA). Mở là dùng, không cần đăng nhập,
 
 - Bài đọc: dán một bài tiếng Anh, app tách câu và đọc lại từng câu (Web Speech API, giọng en-US/en-GB của máy).
 - Tô sáng câu + từ đang đọc, bấm câu để đọc từ đó, lặp câu, đổi tốc độ / giọng, nhớ vị trí đọc dở (theo máy).
+- Bài đọc dùng chung cho mọi sổ: `src/lib/seed-readings.json` (sổ cũ tự được bổ sung khi mở app, giống chủ đề mẫu tiếng Trung).
 
 ### Chung
 

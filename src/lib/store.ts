@@ -4,7 +4,7 @@
 import { useSyncExternalStore } from 'react'
 import { get, set } from 'idb-keyval'
 import { KEY_RE, RECORD_KINDS, type SyncResponse, type WireRecord } from '@shared/sync'
-import { seedRecords } from './seed'
+import { RETIRED_SEED_IDS, seedRecords } from './seed'
 import type { Reading, Rec, SyncStatus, Topic, Word } from './types'
 
 const DB_KEY = 'fluency.db'
@@ -134,6 +134,7 @@ export async function init() {
       dirty.add(r.id)
     }
   }
+  retireSeeds()
   try {
     localStorage.setItem(LIB_KEY, key)
   } catch {}
@@ -141,6 +142,19 @@ export async function init() {
   persist()
   emit()
   startAutoSync()
+}
+
+/**
+ * Xóa bản ghi mẫu đã bỏ khỏi seed nếu người dùng chưa sửa. Đánh dấu xóa với updatedAt = 2: thắng bản mẫu gốc
+ * (updatedAt = 1) kể cả bản đang nằm trên server mà máy này chưa kéo về, nhưng thua mọi chỉnh sửa thật.
+ */
+function retireSeeds() {
+  for (const id of RETIRED_SEED_IDS) {
+    const cur = recs.get(id)
+    if (cur && (cur.deleted || cur.updatedAt > 1)) continue
+    recs.set(id, { ...(cur ?? { id, kind: 'reading' }), deleted: true, updatedAt: 2 } as Rec)
+    dirty.add(id)
+  }
 }
 
 // ───────────── Ghi ─────────────
