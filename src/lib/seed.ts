@@ -44,8 +44,15 @@ const TOPICS: { id: string; prefix: string; name: string; emoji: string; rows: R
   { id: 'seed-family', prefix: 'seed-family-', name: 'Gia đình', emoji: '👪', rows: FAMILY },
 ]
 
+// Bài đọc tiếng Anh mẫu (tự viết) cho module tiếng Anh.
+const SAMPLE_READING = `Every morning, Lan takes the bus to work. The ride is about forty minutes long, so she uses the time to learn English. She puts on her headphones, opens a short article, and listens to it twice.
+
+The first time, she just listens and tries to understand the main idea. The second time, she reads along and repeats each sentence quietly. When she finds a new word, she writes it in a small notebook.
+
+At first, it was hard. Many words sounded different from what she expected. But after a few months, she noticed something surprising: she could follow conversations at work much more easily. Small habits, repeated every day, had made a big difference.`
+
 export function seedRecords(): Rec[] {
-  return TOPICS.flatMap((t, ti) => [
+  return [...TOPICS.flatMap((t, ti) => [
     { id: t.id, kind: 'topic' as const, name: t.name, emoji: t.emoji, createdAt: ti + 1, updatedAt: 1 },
     ...t.rows.map(([hanzi, pinyin, meaning, example, examplePinyin, exampleMeaning, note], i) => ({
       id: `${t.prefix}${i + 1}`,
@@ -61,5 +68,7 @@ export function seedRecords(): Rec[] {
       createdAt: ti * 1000 + i + 1,
       updatedAt: 1,
     })),
-  ])
+  ]),
+    { id: 'seed-reading-1', kind: 'reading' as const, lang: 'en' as const, title: 'Learning on the bus', text: SAMPLE_READING, createdAt: 1, updatedAt: 1 },
+  ]
 }

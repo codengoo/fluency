@@ -132,6 +132,12 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Module tiếng Anh: màu nhấn xanh dương để phân biệt với tiếng Trung (đỏ). */
+:root[data-module='en'] {
+    --brand: #2f6fed;
+    --brand-foreground: #ffffff;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

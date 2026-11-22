@@ -17,7 +17,7 @@ import { SyncBadge } from './sync-badge'
 import { VoiceSettings } from './voice-settings'
 
 export function SettingsDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { words, topics, lastSyncAt, pending } = useStore()
+  const { words, topics, readings, lastSyncAt, pending } = useStore()
   const [other, setOther] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const link = shareLink()
@@ -28,7 +28,7 @@ export function SettingsDrawer({ open, onOpenChange }: { open: boolean; onOpenCh
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Cài đặt</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            {words.length} từ · {topics.length} chủ đề
+            {words.length} từ · {topics.length} chủ đề · {readings.length} bài đọc
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 

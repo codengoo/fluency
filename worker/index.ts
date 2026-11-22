@@ -2,11 +2,10 @@
 // Khóa (key) là bí mật ngẫu nhiên sinh trên máy: ai có khóa thì vào được sổ (giống link nhóm của chiatien).
 
 import { DurableObject } from 'cloudflare:workers'
-import { KEY_RE, MAX_CHANGES, PAGE_SIZE, type SyncRequest, type SyncResponse, type WireRecord } from '../shared/sync.ts'
+import { KEY_RE, MAX_CHANGES, MAX_RECORD_BYTES, PAGE_SIZE, RECORD_KINDS, type SyncRequest, type SyncResponse, type WireRecord } from '../shared/sync.ts'
 
 const SYNC_RE = /^\/api\/lib\/([^/]+)\/sync$/
 const MAX_BODY = 4 * 1024 * 1024
-const MAX_RECORD = 32 * 1024
 
 export default {
   async fetch(request, env) {
@@ -42,10 +41,10 @@ function parseRequest(raw: unknown): SyncRequest {
   if (!Array.isArray(changes) || changes.length > MAX_CHANGES) throw new Error('bad_changes')
   for (const c of changes as WireRecord[]) {
     if (!c || typeof c.id !== 'string' || c.id.length === 0 || c.id.length > 64) throw new Error('bad_id')
-    if (c.kind !== 'word' && c.kind !== 'topic') throw new Error('bad_kind')
+    if (!RECORD_KINDS.includes(c.kind)) throw new Error('bad_kind')
     if (!Number.isSafeInteger(c.updatedAt)) throw new Error('bad_updated_at')
     if (typeof c.deleted !== 'boolean') throw new Error('bad_deleted')
-    if (!c.data || typeof c.data !== 'object' || JSON.stringify(c.data).length > MAX_RECORD) throw new Error('bad_data')
+    if (!c.data || typeof c.data !== 'object' || JSON.stringify(c.data).length > MAX_RECORD_BYTES[c.kind]) throw new Error('bad_data')
   }
   return { since: since as number, changes: changes as WireRecord[] }
 }

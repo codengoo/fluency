@@ -1,8 +1,12 @@
 // Giao thức đồng bộ dùng chung client + Worker.
-// Mỗi bản ghi (từ / chủ đề) đi kèm updatedAt; bản sửa sau cùng thắng (last-write-wins).
+// Mỗi bản ghi (từ / chủ đề / bài đọc) đi kèm updatedAt; bản sửa sau cùng thắng (last-write-wins).
 // Xóa là xóa mềm (deleted = true) để máy khác cũng biết mà xóa.
 
-export type RecordKind = 'word' | 'topic'
+export const RECORD_KINDS = ['word', 'topic', 'reading'] as const
+export type RecordKind = (typeof RECORD_KINDS)[number]
+
+/** Giới hạn kích thước một bản ghi (JSON). Bài đọc dán vào có thể dài nên được rộng hơn. */
+export const MAX_RECORD_BYTES: Record<RecordKind, number> = { word: 32 * 1024, topic: 32 * 1024, reading: 256 * 1024 }
 
 export interface WireRecord {
   id: string

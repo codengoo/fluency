@@ -3,9 +3,9 @@
 
 import { useSyncExternalStore } from 'react'
 import { get, set } from 'idb-keyval'
-import { KEY_RE, type SyncResponse, type WireRecord } from '@shared/sync'
+import { KEY_RE, RECORD_KINDS, type SyncResponse, type WireRecord } from '@shared/sync'
 import { seedRecords } from './seed'
-import type { Rec, SyncStatus, Topic, Word } from './types'
+import type { Reading, Rec, SyncStatus, Topic, Word } from './types'
 
 const DB_KEY = 'fluency.db'
 const LIB_KEY = 'fluency.key'
@@ -21,6 +21,7 @@ export interface Snapshot {
   ready: boolean
   words: Word[]
   topics: Topic[]
+  readings: Reading[]
   status: SyncStatus
   pending: number
   lastSyncAt: number
@@ -41,14 +42,18 @@ let snapshot: Snapshot = build()
 function build(): Snapshot {
   const words: Word[] = []
   const topics: Topic[] = []
+  const readings: Reading[] = []
   for (const r of recs.values()) {
     if (r.deleted) continue
     if (r.kind === 'word') words.push(r)
-    else topics.push(r)
+    else if (r.kind === 'topic') topics.push(r)
+    else if (r.kind === 'reading') readings.push(r)
   }
+  // Bài đọc: mới nhất lên đầu.
+  readings.sort((a, b) => b.createdAt - a.createdAt)
   words.sort((a, b) => a.createdAt - b.createdAt)
   topics.sort((a, b) => a.createdAt - b.createdAt)
-  return { ready, words, topics, status, pending: dirty.size, lastSyncAt, key }
+  return { ready, words, topics, readings, status, pending: dirty.size, lastSyncAt, key }
 }
 
 function emit() {
@@ -183,6 +188,22 @@ export function saveTopic(input: { id?: string; name: string; emoji: string }) {
   }
   put(topic)
   return topic
+}
+
+export function saveReading(input: { id?: string; title: string; text: string }) {
+  const prev = input.id ? (recs.get(input.id) as Reading | undefined) : undefined
+  const reading: Reading = {
+    id: input.id ?? newId(),
+    kind: 'reading',
+    lang: 'en',
+    title: input.title,
+    text: input.text,
+    createdAt: prev?.createdAt ?? Date.now(),
+    updatedAt: stamp(prev),
+    deleted: false,
+  }
+  put(reading)
+  return reading
 }
 
 export function removeRecord(id: string) {
@@ -324,7 +345,7 @@ export async function importJson(file: File) {
   if (!Array.isArray(data.records)) throw new Error('File không đúng định dạng')
   let n = 0
   for (const r of data.records) {
-    if (!r?.id || (r.kind !== 'word' && r.kind !== 'topic')) continue
+    if (!r?.id || !RECORD_KINDS.includes(r.kind)) continue
     const cur = recs.get(r.id)
     if (cur && cur.updatedAt >= r.updatedAt) continue
     recs.set(r.id, { ...r, updatedAt: stamp(cur) })
