@@ -15,8 +15,10 @@ import { hanChars, loadStrokes, StrokeError } from '@/lib/strokes'
 import type { Word } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { SpeakButton } from './speak-button'
+import { Grid, StrokePreview } from './stroke-preview'
 
 // Luyện viết theo nét (Hanzi Writer): vẽ từng nét lên khung 米字格, nét sai báo đỏ, sai 3 lần thì gợi ý.
+// Trên khung viết có ô xem trước cách viết từng chữ (tự vẽ lặp lại, bộ thủ tô đỏ).
 // Từ nhiều chữ thì viết lần lượt từng chữ; luyện nhiều từ thì có Trước / Tiếp.
 
 interface Props {
@@ -82,6 +84,9 @@ export default function WritingPractice({ open, onOpenChange, words, startIndex 
   const word = words[wi] as Word | undefined
   const chars = word ? hanChars(word.hanzi) : []
   const char = chars[ci]
+  // Ô xem trước: to khi từ ngắn, nhỏ lại cho vừa hàng khi từ nhiều chữ.
+  const tile = Math.min(chars.length <= 2 ? 88 : 72, Math.floor((size - 8 * (chars.length - 1)) / Math.max(1, chars.length)))
+  const [strokeCounts, setStrokeCounts] = useState<Record<string, number>>({})
   const wordDone = chars.length > 0 && results.length === chars.length && results.every((r) => r !== undefined)
 
   const startQuiz = (writer: HanziWriter) => {
@@ -209,31 +214,35 @@ export default function WritingPractice({ open, onOpenChange, words, startIndex 
                 <SpeakButton text={word.hanzi} className="bg-card shadow-sm" />
               </div>
 
-              {chars.length > 1 && (
-                <div className="flex gap-1.5">
-                  {chars.map((c, i) => {
-                    const done = results[i] !== undefined
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setCi(i)}
-                        className={cn(
-                          'relative flex size-11 items-center justify-center rounded-xl font-hanzi text-2xl transition-colors',
-                          i === ci ? 'bg-brand/15 ring-2 ring-brand' : 'bg-muted',
-                        )}
-                        aria-label={`Chữ thứ ${i + 1}`}
-                      >
+              {/* Xem trước cách viết từng chữ (tự lặp); bấm để chọn chữ cần viết. */}
+              <div className="flex justify-center gap-2">
+                {chars.map((c, i) => {
+                  const done = results[i] !== undefined
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setCi(i)}
+                      className="flex flex-col items-center gap-1"
+                      aria-label={`Chữ thứ ${i + 1}`}
+                      aria-pressed={i === ci}
+                    >
+                      <span className={cn('relative rounded-xl transition-shadow', i === ci && 'ring-2 ring-brand ring-offset-2 ring-offset-background')}>
                         {/* Tắt chữ mờ = tự nhớ viết: chưa viết xong thì không lộ chữ. */}
-                        {done || outline ? c : <span className="text-base text-muted-foreground">{i + 1}</span>}
-                        {done && (
-                          <CheckIcon className="absolute -top-1 -right-1 size-4 rounded-full bg-emerald-500 p-0.5 text-white" />
+                        {done || outline ? (
+                          <StrokePreview char={c} size={tile} onStrokes={(n) => setStrokeCounts((m) => (m[c] === n ? m : { ...m, [c]: n }))} />
+                        ) : (
+                          <span className="flex items-center justify-center rounded-xl border bg-muted text-lg text-muted-foreground" style={{ width: tile, height: tile }}>
+                            {i + 1}
+                          </span>
                         )}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
+                        {done && <CheckIcon className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-emerald-500 p-0.5 text-white" />}
+                      </span>
+                      <span className="h-4 text-xs text-muted-foreground">{strokeCounts[c] && (done || outline) ? `${strokeCounts[c]} nét` : ''}</span>
+                    </button>
+                  )
+                })}
+              </div>
 
               {/* data-vaul-no-drag + touch-none: vẽ trên điện thoại không kéo drawer / cuộn trang. */}
               <div
@@ -312,19 +321,5 @@ export default function WritingPractice({ open, onOpenChange, words, startIndex 
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
-  )
-}
-
-/** Khung 米字格: viền, hai đường giữa và hai đường chéo nét đứt. */
-function Grid() {
-  return (
-    <svg className="pointer-events-none absolute inset-0 size-full text-border" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-      <g stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" vectorEffect="non-scaling-stroke">
-        <line x1="50" y1="0" x2="50" y2="100" />
-        <line x1="0" y1="50" x2="100" y2="50" />
-        <line x1="0" y1="0" x2="100" y2="100" />
-        <line x1="100" y1="0" x2="0" y2="100" />
-      </g>
-    </svg>
   )
 }
